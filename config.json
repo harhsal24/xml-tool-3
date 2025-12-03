@@ -1,33 +1,32 @@
 {
-  "namespace": "d",
-  "attributesToIncludeInPath": [
-    "ValuationUseType",
-    "ImageCategoryType"
-  ],
-
-  "forceIndexOneFor": [],
-  "exceptionsToIndexOneForcing": [
-    "MESSAGE",
-    "DOCUMENT_SETS",
-    "DOCUMENT_SET",
-    "DOCUMENTS",
-    "DOCUMENT",
-    "DEAL_SETS",
-    "DEAL_SET",
-    "DEALS",
-    "DEAL",
-    "SERVICES",
-    "SERVICE",
-    "VALUATION",
-    "VALUATION_RESPONSE",
-    "VALUATION_ANALYSES",
-    "VALUATION_ANALYSIS",
-    "PROPERTIES"
-  ],
-
-  "ignoreLeafNodes": [
-    "ImageFileLocationIdentifier"
-  ],
-   "startAtTag": "PROPERTY",
-  "disableLeafNodeIndexing": false
+    "namespace": "d",
+    "attributesToIncludeInPath": [
+        "ValuationUseType",
+        "ImageCategoryType"
+    ],
+    "forceIndexOneFor": [],
+    "exceptionsToIndexOneForcing": [
+        "MESSAGE",
+        "DOCUMENT_SETS",
+        "DOCUMENT_SET",
+        "DOCUMENTS",
+        "DOCUMENT",
+        "DEAL_SETS",
+        "DEAL_SET",
+        "DEALS",
+        "DEAL",
+        "SERVICES",
+        "SERVICE",
+        "VALUATION",
+        "VALUATION_RESPONSE",
+        "VALUATION_ANALYSES",
+        "VALUATION_ANALYSIS",
+        "PROPERTIES"
+    ],
+    "ignoreLeafNodes": [
+        "ImageFileLocationIdentifier"
+    ],
+    "startAtTag": "PROPERTY",
+    "disableLeafNodeIndexing": false,
+    "includeLeafValuePredicate": false
 }

@@ -12,6 +12,7 @@
   "type": "commonjs",
   "dependencies": {
     "@xmldom/xmldom": "^0.8.11",
-    "xmldom": "^0.6.0"
+    "xmldom": "^0.6.0",
+    "xpath": "^0.0.34"
   }
 }
