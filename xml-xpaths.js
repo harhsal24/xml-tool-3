@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 const fs = require('fs');
 const { DOMParser, XMLSerializer } = require('@xmldom/xmldom');
 
@@ -35,6 +34,67 @@ options.ignoreLeafNodes = options.ignoreLeafNodes || [];
 options.forceIndexOneFor = options.forceIndexOneFor || [];
 options.exceptionsToIndexOneForcing = options.exceptionsToIndexOneForcing || [];
 options.disableLeafNodeIndexing = options.disableLeafNodeIndexing || false;
+// NEW: optional starting tag name (string) - if provided, traversal starts at first matching element
+// Example: "startAtTag": "PROPERTY"
+options.startAtTag = options.startAtTag || null;
+
+// ---------------------------------------------
+// Helper: build starting path for a given element
+// ---------------------------------------------
+function buildStartPathForElement(node, opts) {
+    if (!node) return null;
+
+    // build predicate string based on configured attributes
+    let predicateStr = '';
+    for (const a of opts.attributesToIncludeInPath) {
+        if (node.hasAttribute && node.hasAttribute(a)) {
+            predicateStr += `[@${a}="${node.getAttribute(a)}"]`;
+        }
+    }
+
+    // compute index among siblings with same tag+predicate
+    let index = 1;
+    const parent = node.parentNode;
+    if (parent) {
+        const siblings = Array.from(parent.childNodes).filter(n => n.nodeType === 1);
+        let count = 0;
+        for (const s of siblings) {
+            // only count same tag name *and* identical predicate string (based on attributes)
+            let sPred = '';
+            for (const a of opts.attributesToIncludeInPath) {
+                if (s.hasAttribute && s.hasAttribute(a)) {
+                    sPred += `[@${a}="${s.getAttribute(a)}"]`;
+                }
+            }
+            if (s.tagName === node.tagName && sPred === predicateStr) {
+                count++;
+                if (s === node) {
+                    index = count;
+                    break;
+                }
+            }
+        }
+    }
+
+    // decide whether to show [1] for index === 1
+    let indexStr = '';
+    if (index === 1) {
+        let showIndex = false;
+        if (opts.forceIndexOneFor.length === 0) {
+            showIndex = true; // force for all
+        } else if (opts.forceIndexOneFor.includes(node.tagName)) {
+            showIndex = true;
+        }
+        if (opts.exceptionsToIndexOneForcing.includes(node.tagName)) {
+            showIndex = false;
+        }
+        if (showIndex) indexStr = `[1]`;
+    } else {
+        indexStr = `[${index}]`;
+    }
+
+    return `//${opts.namespace}:${node.tagName}${predicateStr}${indexStr}`;
+}
 
 // ---------------------------------------------
 // XML → XPATH
@@ -51,13 +111,40 @@ function generateXpathList(xmlString, opts) {
 
     const results = [];
 
-    const root = doc.documentElement;
-    if (root) {
-        // <-- changed here: use double slash at start
-        const rootPath = `//${opts.namespace}:${root.tagName}[1]`;
-        traverse(root, rootPath, results, opts);
+    // determine starting node and starting path
+    let startNode = null;
+    let startPath = null;
+
+    if (opts.startAtTag) {
+        // try both plain tag and namespaced tag
+        const attempts = [
+            opts.startAtTag,
+            `${opts.namespace}:${opts.startAtTag}`
+        ];
+
+        for (const t of attempts) {
+            const found = Array.from(doc.getElementsByTagName(t));
+            if (found.length > 0) {
+                startNode = found[0];
+                break;
+            }
+        }
+
+        // if found, build a correct starting path using the chosen node
+        if (startNode) {
+            startPath = buildStartPathForElement(startNode, opts);
+        }
     }
 
+    // fallback to documentElement
+    if (!startNode) {
+        startNode = doc.documentElement;
+        // keep old behavior: double-slash + [1] for root
+        startPath = `//${opts.namespace}:${startNode.tagName}[1]`;
+    }
+
+    // traverse from the chosen node/path
+    traverse(startNode, startPath, results, opts);
     return results.join('\n');
 }
 
@@ -70,12 +157,11 @@ function traverse(node, currentPath, results, opts) {
     const children = Array.from(node.childNodes).filter(n => n.nodeType === 1);
 
     // HANDLE LEAF NODE (contains value text)
-    if (children.length === 0 && node.textContent.trim()) {
+    if (children.length === 0 && node.textContent && node.textContent.trim()) {
         const text = node.textContent.trim();
 
         if (!opts.disableLeafNodeIndexing) {
             // attach a predicate-like element-for-leaf (keeps namespace qualifier)
-            // Note: this appends a predicate referencing the leaf node name+value
             const leafXpath = `${currentPath}[${opts.namespace}:${node.tagName}="${text}"]`;
             results.push(text + ' : ' + leafXpath);
         } else {
@@ -94,7 +180,7 @@ function traverse(node, currentPath, results, opts) {
 
         // append attribute selectors
         for (const a of opts.attributesToIncludeInPath) {
-            if (child.hasAttribute(a)) {
+            if (child.hasAttribute && child.hasAttribute(a)) {
                 predicateStr += `[@${a}="${child.getAttribute(a)}"]`;
             }
         }

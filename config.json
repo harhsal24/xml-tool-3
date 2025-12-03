@@ -28,6 +28,6 @@
   "ignoreLeafNodes": [
     "ImageFileLocationIdentifier"
   ],
-
+   "startAtTag": "PROPERTY",
   "disableLeafNodeIndexing": false
 }
