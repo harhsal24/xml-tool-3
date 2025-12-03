@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const fs = require('fs');
 const { DOMParser, XMLSerializer } = require('@xmldom/xmldom');
 
