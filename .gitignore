@@ -1,1 +1,4 @@
 node_modules
+input
+output.txt
+package-lock.json
