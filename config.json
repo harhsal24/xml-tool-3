@@ -1,9 +1,9 @@
 {
     "namespace": "d",
     "attributesToIncludeInPath": [
-        "ValuationUseType",
-        "ImageCategoryType"
+        "ValuationUseType"
     ],
+    "childFilters":[ "ImageCategoryType"],
     "forceIndexOneFor": [],
     "exceptionsToIndexOneForcing": [
         "MESSAGE",
